@@ -3,7 +3,7 @@
 @inject NotificationService notificationService
 
 <PageTitle>Registro de Tickets</PageTitle>
-<EditForm Model="ticket" OnValidSubmit="Guardar">
+<EditForm Model="tickets" OnValidSubmit="Guardar">
 	<div class="container">
 		<div class="card shadow-lg">
 			<div class="card-header alert-secondary" style="color: white; background-color: royalblue;">
@@ -19,7 +19,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					@foreach (var ticket in Tickets) 
+					@foreach (var ticket in Tickets)
 					{
 						<tr class="text-center">
 							<td>@ticket.TicketId</td>
@@ -34,13 +34,12 @@
 </EditForm>
 
 @code {
-	public Tickets ticket { get; set; } = new Tickets();
+	public Tickets? tickets { get; set; } = new Tickets();
 	public string mensaje = "";
 	public int? ticketEditando = null;
 
 	public int Filtro { get; set; }
 	public List<Tickets>? Tickets { get; set; }
-	public Tickets? tickets { get; set; } = new Tickets();
 	public int Conteo { get; set; }
 
 	public DateTime Desde { get; set; }

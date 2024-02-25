@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RegistroDetalle.Models;
-using System.Collections.Generic;
 
 namespace RegistroDetalle.Api.Context
 {
