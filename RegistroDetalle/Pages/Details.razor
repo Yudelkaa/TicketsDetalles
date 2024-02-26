@@ -1,8 +1,7 @@
 ﻿@page "/Details"
 @inject HttpClient httpClient
-@inject NotificationService notificationService
 
-<PageTitle>Registro de Tickets</PageTitle>
+<PageTitle>Detalle de Tickets</PageTitle>
 <EditForm Model="tickets" OnValidSubmit="Guardar">
 	<div class="container">
 		<div class="card shadow-lg">
@@ -16,16 +15,27 @@
 				<thead>
 					<tr class="text-center">
 						<th>TicketId</th>
+						<th>ClienteId</th>
+						<th>Fecha</th>
+						<th>Solicitado Por:</th>
+						<th>Asunto</th>
+						<th>Descripci&oacute;n</th>
+						<th>Eliminar</th>
 					</tr>
 				</thead>
 				<tbody>
-					@foreach (var ticket in Tickets)
+				 	@foreach (var ticket in Tickets)
 					{
 						<tr class="text-center">
 							<td>@ticket.TicketId</td>
-							<td><button class="btn btn-danger bi bi-trash" @onclick="() => Eliminar()"></button></td> // Pasar el ticket como parámetro
+							<td>@ticket.ClienteId</td>
+							<td>@ticket.Fecha</td>
+							<td>@ticket.SolicitadoPor</td>
+							<td>@ticket.Asunto</td>
+							<td>@ticket.Descripcion</td>
+							<td><button class="btn btn-danger bi bi-trash" @onclick="() => Eliminar()"></button></td>
 						</tr>
-					}
+					} 
 				</tbody>
 			</table>
 		</div>
@@ -39,7 +49,7 @@
 	public int? ticketEditando = null;
 
 	public int Filtro { get; set; }
-	public List<Tickets>? Tickets { get; set; }
+	public List<Tickets> Tickets = new List<Tickets>();
 	public int Conteo { get; set; }
 
 	public DateTime Desde { get; set; }
@@ -51,6 +61,8 @@
 		await Buscar();
 		Desde = DateTime.Now.AddMonths(-1);
 		Hasta = DateTime.Now;
+		//Tickets = await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets");
+
 	}
 
 	public async Task Guardar()
@@ -58,27 +70,11 @@
 		using var response = await httpClient.PostAsJsonAsync("api/Tickets", tickets);
 		if (!response.IsSuccessStatusCode)
 		{
-			var mensaje = new NotificationMessage
-				{
-					Severity = NotificationSeverity.Error,
-					Summary = "Error",
-					Detail = "No se pudo Guardar correctamente, verifique los campos",
-					Duration = 4_000
-				};
-			notificationService.Notify(mensaje);
 			return;
 		}
 		var ticketDevuelto = await response.Content.ReadFromJsonAsync<Tickets>();
 		if (ticketDevuelto is not null)
 		{
-			var mensaje = new NotificationMessage
-				{
-					Severity = NotificationSeverity.Success,
-					Summary = "Validacion",
-					Detail = "Ticket Guardado Correctamente",
-					Duration = 4_000
-				};
-			notificationService.Notify(mensaje);
 			tickets = ticketDevuelto;
 			StateHasChanged();
 			this.Nuevo();
@@ -98,11 +94,11 @@
 			Tickets = (await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets"))!.Where(t => t.Asunto!.ToLower() == tickets!.Asunto.ToLower() && t.Fecha >= Desde.Date && t.Fecha <= Hasta).ToList();
 			StateHasChanged();
 		}
-		else
-		{
-			Tickets = await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets");
-			StateHasChanged();
-		}
+		// else
+		// {
+		// 	Tickets = await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets");
+		// 	StateHasChanged();
+		// }
 		Conteo = Tickets != null ? Tickets!.Count() : 0;
 	}
 
@@ -114,30 +110,12 @@
 
 	public async Task Eliminar()
 	{
-		using var response = await httpClient.DeleteAsync($"api/Tickets/{tickets.TicketId}");
+		using var response = await httpClient.DeleteAsync($"api/Tickets/{tickets?.TicketId}");
 		if (!response.IsSuccessStatusCode)
 		{
-			var mensaje = new NotificationMessage
-				{
-					Severity = NotificationSeverity.Error,
-					Summary = "Error",
-					Detail = "El Ticket no fue Eliminado Correctamente",
-					Duration = 4_000
-				};
-			notificationService.Notify(mensaje);
 			return;
 		}
-		else
-		{
-			var mensaje = new NotificationMessage
-				{
-					Severity = NotificationSeverity.Success,
-					Summary = "Validacion",
-					Detail = "Ticket Eliminado Correctamente",
-					Duration = 4_000
-				};
-			notificationService.Notify(mensaje);
-		}
+
 		Nuevo();
 	}
 }
