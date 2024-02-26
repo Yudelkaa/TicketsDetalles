@@ -100,6 +100,7 @@
 						<th>TicketId</th>
 						<th>Emisor</th>
 						<th>Mensaje</th>
+						<th>Eliminar</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -111,7 +112,7 @@
 							<td>@tickets.TicketId</td>
 							<td>@detalle.Emisor</td>
 							<td>@detalle.Mensaje</td>
-							<td><button type="button" class="btn btn-danger oi oi-trash" @onclick=@(() => RemoverDetalle(detalle))></button></td>
+							<td><button type="button" class="btn btn-danger bi bi-trash" @onclick=@(() => RemoverDetalle(detalle))></button></td>
 						</tr>
 					}
 				</tbody>

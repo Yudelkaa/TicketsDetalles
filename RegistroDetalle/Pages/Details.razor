@@ -23,7 +23,7 @@
 					</tr>
 				</thead>
 				<tbody>
-				 	@foreach (var ticket in Tickets)
+				 	@foreach (var ticket in TicketsList)
 					{
 						<tr class="text-center">
 							<td>@ticket.TicketId</td>
@@ -48,7 +48,7 @@
 	public int? ticketEditando = null;
 
 	public int Filtro { get; set; }
-	public List<Tickets> Tickets = new List<Tickets>();
+	public List<Tickets> TicketsList = new List<Tickets>();
 	public int Conteo { get; set; }
 
 	public DateTime Desde { get; set; }
@@ -82,23 +82,21 @@
 
 	public async Task Buscar()
 	{
+		TicketsList = new List<Tickets>(); 
+
 		if (Filtro == 1 && tickets!.TicketId > 0)
 		{
-			Tickets = (await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets"))!.Where(t => t.TicketId == tickets!.TicketId && t.Fecha >= Desde.Date && t.Fecha <= Hasta).ToList();
-			StateHasChanged();
+			TicketsList = (await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets"))!.Where(t => t.TicketId == tickets!.TicketId && t.Fecha >= Desde.Date && t.Fecha <= Hasta).ToList();
+		}
+		else if (Filtro == 2 && !string.IsNullOrEmpty(tickets!.Asunto))
+		{
+			TicketsList = (await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets"))!.Where(t => t.Asunto!.ToLower() == tickets!.Asunto.ToLower() && t.Fecha >= Desde.Date && t.Fecha <= Hasta).ToList();
 		}
 		else
-		if (Filtro == 2 && !string.IsNullOrEmpty(tickets!.Asunto))
 		{
-			Tickets = (await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets"))!.Where(t => t.Asunto!.ToLower() == tickets!.Asunto.ToLower() && t.Fecha >= Desde.Date && t.Fecha <= Hasta).ToList();
-			StateHasChanged();
+			TicketsList = await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets");
 		}
-		// else
-		// {
-		// 	Tickets = await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets");
-		// 	StateHasChanged();
-		// }
-		Conteo = Tickets != null ? Tickets!.Count() : 0;
+		Conteo = TicketsList.Count();
 	}
 
 	void Nuevo()
