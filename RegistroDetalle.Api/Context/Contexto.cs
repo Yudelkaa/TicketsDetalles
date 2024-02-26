@@ -7,6 +7,7 @@ namespace RegistroDetalle.Api.Context
     {
         public Contexto(DbContextOptions<Contexto> options) : base(options) { }
         public DbSet<Tickets> Tickets { get; set; }
+        public DbSet<TicketsDetalle> TicketsDetalles { get; set; }
 
     }
 }

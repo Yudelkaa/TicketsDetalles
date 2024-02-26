@@ -38,7 +38,7 @@
 				</div>
 
 				<div class="row">
-					<div class="col-xs-12 col-sm-12 col-md-8 col-lg-6 col-xl-4">
+					<div class="col-4">
 						<label><strong>Solicitado por:</strong></label>
 						<InputSelect @bind-Value="tickets.SolicitadoPor" class="form-select">
 							<option value=""></option>
@@ -68,60 +68,167 @@
 			<div class="card-footer justify-content-center d-flex">
 				<div>
 					<button type="submit" class="btn btn-primary bi bi-floppy"> Guardar<i class="oi oi-document" />
-					</button>@mensaje
+					</button>
 				</div>
 			</div>
 		</div>
-		
+
+		@*Detalle*@
+		<div class="card card-header">
+			<h3>Detalle Tickets</h3>
+		</div>
+		<div>
+			<label class="form-label"><span class="oi oi-person" /> Nombre</label>
+			<InputText @bind-Value="Detalle.Emisor" class="form-control" placeholder="Enel Almonte"></InputText>
+			<ValidationMessage For="@(() => Detalle.Emisor)" />
+		</div>
+		<div>
+			<label class="form-label"><span class="oi oi-envelope-closed" /> Mensaje</label>
+			<InputTextArea @bind-Value="Detalle.Mensaje" class="form-control" placeholder="Escriba su mensaje"></InputTextArea>
+			<ValidationMessage For="@(() => Detalle.Mensaje)" />
+		</div>
+		<div class="card-footer d-flex justify-content-center">
+			<button type="button" class="btn btn-outline-success" @onclick="AgregarDetalle">Agregar</button>
+		</div>
+		<table class='table table-sm'>
+			<thead>
+				<tr>
+					<th>TicketId</th>
+					<th>Emisor</th>
+					<th>Mensaje</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var detalle in tickets.TicketsDetalle)
+				{
+					var ticketEncontrado = BuscarTicket(detalle.TicketId);
+					<tr>
+						<td>@tickets.TicketId</td>
+						<td>@detalle.Emisor</td>
+						<td>@detalle.Mensaje</td>
+						<td><button type="button" class="btn btn-danger oi oi-trash" @onclick=@(() => RemoverDetalle(detalle))></button></td>
+					</tr>
+				}
+			</tbody>
+		</table>
 	</div>
 </EditForm>
 
 @code {
-	public Tickets tickets { get; set; } = new Tickets();
-	public string mensajeError = "";
-	public string? mensaje;
-	public string? mensajeElim;
-	List<Tickets> listaSolicitado = new List<Tickets>();
+    [Parameter]
 
-	public async Task Buscar()
-	{
-		var ticketIdEncontrado = (await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets"))!
-		.ToList()
-		.Any(t => t.TicketId == tickets.TicketId);
-		if (ticketIdEncontrado)
-		{
-			var ticketEncontrado = await httpClient.GetFromJsonAsync<Tickets>($"api/Tickets/{tickets.TicketId}");
-			if (ticketEncontrado != null)
-			{
-				this.tickets = ticketEncontrado;
-				StateHasChanged();
-			}
-		}
-		else
-		{
-			return;
-		}
-	}
+    public int TicketId { get; set; }
+    List<Tickets> listaSolicitado = new List<Tickets>();
+    public Tickets tickets { get; set; } = new Tickets();
+    public TicketsDetalle Detalle { get; set; } = new TicketsDetalle();
 
-	public async Task Guardar()
-	{
-		using var response = await httpClient.PostAsJsonAsync("api/Tickets", tickets);
-		if (!response.IsSuccessStatusCode)
-		{
-			return;
-		}
-		var ticketDevuelto = await response.Content.ReadFromJsonAsync<Tickets>();
-		if (ticketDevuelto is not null)
-		{
-			tickets = ticketDevuelto;
-			StateHasChanged();
-			this.Nuevo();
-		}
-	}
+    public bool mensajeVacio;
+    public bool emisorVacio;
 
-	void Nuevo()
-	{
-		this.tickets = new Tickets();
-		mensajeError = string.Empty;
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        if (TicketId > 0)
+        {
+            this.tickets.TicketId = TicketId;
+            await Buscar();
+        }
+    }
+
+    private async Task<Tickets> BuscarTicket(int ticketId)
+    {
+        Tickets tickets = new Tickets();
+        var ticketEncontrado = await httpClient.GetFromJsonAsync<Tickets>($"api/Tickets/{ticketId}");
+        if (ticketEncontrado != null)
+            return tickets = ticketEncontrado;
+        return new Tickets();
+    }
+
+    public async Task Buscar()
+    {
+        var ticketIdEncontrado = (await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets"))!
+        .ToList()
+        .Any(t => t.TicketId == tickets.TicketId);
+        if (ticketIdEncontrado)
+        {
+            var ticketEncontrado = await httpClient.GetFromJsonAsync<Tickets>($"api/Tickets/{tickets.TicketId}");
+            if (ticketEncontrado != null)
+            {
+                this.tickets = ticketEncontrado;
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    public async Task Guardar()
+    {
+        using var response = await httpClient.PostAsJsonAsync("api/Tickets", tickets);
+        if (!response.IsSuccessStatusCode)
+        {
+            return;
+        }
+        var ticketDevuelto = await response.Content.ReadFromJsonAsync<Tickets>();
+        if (ticketDevuelto is not null)
+        {
+            tickets = ticketDevuelto;
+            StateHasChanged();
+            this.Nuevo();
+        }
+    }
+
+    public void Nuevo()
+    {
+        this.tickets = new Tickets();
+        this.Detalle = new TicketsDetalle();
+    }
+
+    public async Task Eliminar()
+    {
+        using var response = await httpClient.DeleteAsync($"api/Tickets/{tickets.TicketId}");
+        if (!response.IsSuccessStatusCode)
+        {
+            return;
+        }
+        Nuevo();
+    }
+
+    public bool Validar()
+    {
+        mensajeVacio = string.IsNullOrEmpty(Detalle.Mensaje);
+        emisorVacio = string.IsNullOrEmpty(Detalle.Emisor);
+        return mensajeVacio || emisorVacio || Detalle.Emisor!.Any(Char.IsDigit);
+    }
+
+    public void AgregarDetalle()
+    {
+        if (tickets != null)
+        {
+            if (Validar())
+            {
+                return;
+            }
+            Detalle.TicketId = tickets.TicketId;
+
+            tickets.TicketsDetalle.Add(Detalle);
+            Detalle = new TicketsDetalle();
+        }
+    }
+
+    public async Task RemoverDetalle(TicketsDetalle detalle)
+    {
+
+        var detalleEncontrado = tickets.TicketsDetalle.FirstOrDefault(t => t.DetalleId == detalle.DetalleId);
+        if (detalleEncontrado != null)
+        {
+            var ticket = BuscarTicket(detalleEncontrado.TicketId);
+            detalle = detalleEncontrado;
+            Detalle = detalleEncontrado;
+            tickets.TicketsDetalle.Remove(detalle);
+            await httpClient.DeleteAsync($"api/Tickets/DeleteTicketsMessages/{detalle.DetalleId}");
+        }
+    }
 }
