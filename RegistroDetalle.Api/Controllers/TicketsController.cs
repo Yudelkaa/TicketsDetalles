@@ -38,6 +38,7 @@ namespace RegistroDetalle.Api.Controllers
             {
                 return NotFound();
             }
+            tickets = await _context.Tickets.Include(t => t.TicketsDetalle).Where(t => t.TicketId == id).FirstOrDefaultAsync();
 
             return tickets;
         }
@@ -78,10 +79,12 @@ namespace RegistroDetalle.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Tickets>> PostTickets(Tickets tickets)
         {
-            _context.Tickets.Add(tickets);
+            if (!TicketsExists(tickets.TicketId))
+                _context.Tickets.Add(tickets);
+            else
+                _context.Tickets.Update(tickets);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetTickets", new { id = tickets.TicketId }, tickets);
+            return Ok(tickets);
         }
 
         // DELETE: api/Tickets/5

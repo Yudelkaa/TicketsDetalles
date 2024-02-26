@@ -172,7 +172,9 @@
 
 	public async Task Guardar()
 	{
+		tickets.TicketsDetalle.Add(Detalle);
 		using var response = await httpClient.PostAsJsonAsync("api/Tickets", tickets);
+		
 		if (!response.IsSuccessStatusCode)
 		{
 			return;
