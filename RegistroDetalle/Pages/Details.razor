@@ -19,7 +19,9 @@
 						<th>Solicitado Por:</th>
 						<th>Asunto</th>
 						<th>Descripci&oacute;n</th>
+						<th>Editar</th>
 						<th>Eliminar</th>
+					
 					</tr>
 				</thead>
 				<tbody>
@@ -32,7 +34,11 @@
 							<td>@ticket.SolicitadoPor</td>
 							<td>@ticket.Asunto</td>
 							<td>@ticket.Descripcion</td>
+							<td>
+								<a href="/Edit/@tickets.TicketId" class="bi bi-pencil btn btn-success" />
+							</td>
 							<td><button class="btn btn-danger bi bi-trash" @onclick="() => Eliminar()"></button></td>
+							
 						</tr>
 					} 
 				</tbody>
@@ -49,7 +55,7 @@
 
 	public int Filtro { get; set; }
 	public List<Tickets> TicketsList = new List<Tickets>();
-	public int Conteo { get; set; }
+	public int cuenta { get; set; }
 
 	public DateTime Desde { get; set; }
 	public DateTime Hasta { get; set; }
@@ -96,7 +102,7 @@
 		{
 			TicketsList = await httpClient.GetFromJsonAsync<List<Tickets>>($"api/Tickets");
 		}
-		Conteo = TicketsList.Count();
+		cuenta = TicketsList.Count();
 	}
 
 	void Nuevo()
