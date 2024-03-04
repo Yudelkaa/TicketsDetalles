@@ -25,7 +25,7 @@ namespace RegistroDetalle.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Tickets>>> GetTickets()
         {
-            return await _context.Tickets.ToListAsync();
+            return await _context.Tickets.Include(op=> op.TicketsDetalle).ToListAsync();
         }
 
         // GET: api/Tickets/5

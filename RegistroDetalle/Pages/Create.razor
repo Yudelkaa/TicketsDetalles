@@ -109,7 +109,7 @@
 					{
 						var ticketEncontrado = BuscarTicket(detalle.TicketId);
 						<tr>
-							<td>@tickets.TicketId</td>
+							<td>@detalle.TicketId</td>
 							<td>@detalle.Emisor</td>
 							<td>@detalle.Mensaje</td>
 							<td><button type="button" class="btn btn-danger bi bi-trash" @onclick=@(() => RemoverDetalle(detalle))></button></td>
@@ -126,10 +126,12 @@
 
 	public int TicketId { get; set; }
 	List<Tickets> listaSolicitado = new List<Tickets>();
+	public List<TicketsDetalle> ListaDetalles = new List<TicketsDetalle>();
 	public Tickets tickets { get; set; } = new Tickets();
 	public TicketsDetalle Detalle { get; set; } = new TicketsDetalle();
 
 	public bool mensajeVacio;
+	public int resultado;
 	public bool emisorVacio;
 
 	protected override async Task OnInitializedAsync()
@@ -140,6 +142,7 @@
 			await Buscar();
 		}
 	}
+
 
 	private async Task<Tickets> BuscarTicket(int ticketId)
 	{
@@ -172,21 +175,15 @@
 
 	public async Task Guardar()
 	{
-		
-		using var response = await httpClient.PostAsJsonAsync("api/Tickets", tickets);
+
+		var response = await httpClient.PostAsJsonAsync("api/Tickets", tickets);
 
 		if (!response.IsSuccessStatusCode)
 		{
 			return;
 		}
-		var ticketDevuelto = await response.Content.ReadFromJsonAsync<Tickets>();
-		if (ticketDevuelto is not null)
-		{
-			tickets = ticketDevuelto;
-			Detalle.DetalleId = tickets.TicketId;
-			StateHasChanged();
-			this.Nuevo();
-		}
+		Detalle.TicketId = tickets.TicketId;
+		StateHasChanged();
 	}
 
 	public void Nuevo()
@@ -197,7 +194,7 @@
 
 	public async Task Eliminar()
 	{
-		using var response = await httpClient.DeleteAsync($"api/Tickets/{tickets.TicketId}");
+		var response = await httpClient.DeleteAsync($"api/Tickets/{tickets.TicketId}");
 		if (!response.IsSuccessStatusCode)
 		{
 			return;
@@ -205,26 +202,19 @@
 		Nuevo();
 	}
 
-	public bool Validar()
+	public async Task AddDetalle()
 	{
-		mensajeVacio = string.IsNullOrEmpty(Detalle.Mensaje);
-		emisorVacio = string.IsNullOrEmpty(Detalle.Emisor);
-		return mensajeVacio || emisorVacio || Detalle.Emisor!.Any(Char.IsDigit);
-	}
 
-	public void AddDetalle()
-	{
-		if (tickets != null)
-		{
-			if (Validar())
-			{
-				return;
-			}
-			Detalle.TicketId = tickets.TicketId;
+		var nuevoDetalle = new TicketsDetalle() { Mensaje = Detalle.Mensaje, Emisor = Detalle.Emisor};
+		tickets.TicketsDetalle.Add(nuevoDetalle);
+		//Detalle.TicketId = tickets.TicketId;
 
-			tickets.TicketsDetalle.Add(Detalle);
-			Detalle = new TicketsDetalle();
-		}
+		// //var response = await httpClient.PostAsJsonAsync("api/Tickets", tickets);
+			// if (!response.IsSuccessStatusCode)
+			// {
+			// 	return;
+			// }
+			//StateHasChanged();
 	}
 
 	public async Task RemoverDetalle(TicketsDetalle detalle)
